@@ -1,6 +1,12 @@
-mod fs;
+#![allow(unused_variables, dead_code)]
+
+mod asset;
+mod config;
 mod hash;
+mod iterator;
 use clap::{Parser, Subcommand};
+use config::Config;
+use iterator::collect_reference_objects;
 use std::io;
 use std::path::PathBuf;
 
@@ -25,11 +31,11 @@ enum Commands {
     },
 }
 
-fn parse_path_or_exit(cli: Cli) -> io::Result<PathBuf> {
-    match std::fs::canonicalize(cli.path) {
+fn parse_path_or_exit(path: String) -> io::Result<PathBuf> {
+    match std::fs::canonicalize(path) {
         Err(e) => {
             eprintln!(
-                "Error: unable to canonicalize the path. The error is: \n{:#?}",
+                "Error: unable to canonicalize the path. Most likely base directory is missing. Error: \n{:#?}",
                 e
             );
             std::process::exit(1);
@@ -39,9 +45,26 @@ fn parse_path_or_exit(cli: Cli) -> io::Result<PathBuf> {
 }
 
 fn main() -> io::Result<()> {
+    // parse cli
     let cli = Cli::parse();
-    let full_path = parse_path_or_exit(cli)?;
-    let res = fs::collect_reference_objects(&full_path)?;
-    println!("{:#?}", res);
+    let config: Config;
+
+    // load config
+    match config::load_config() {
+        Ok(c) => config = c,
+        Err(e) => {
+            eprintln!("Failed to load configuration file. Error: {:#?}", e);
+            std::process::exit(1);
+        }
+    }
+
+    let full_path = parse_path_or_exit(config.base_path)?;
+    let ref_objects = collect_reference_objects(&full_path)?;
+
+    for a in ref_objects {
+        let asset = a?;
+        eprintln!("{:#?}", asset);
+    }
+
     return Ok(());
 }
