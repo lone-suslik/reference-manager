@@ -2,7 +2,7 @@ use std::io::BufReader;
 use std::{hash::Hasher, io::Read};
 use twox_hash::xxh3::Hash128;
 
-pub fn hash_big_file_async(f: &str) -> Result<u64, std::io::Error> {
+pub fn hash_big_file(f: &str) -> Result<u64, std::io::Error> {
     let mut hash = Hash128::with_seed(0);
     let f: std::fs::File = std::fs::File::open(f)?;
     let mut f: BufReader<std::fs::File> = BufReader::new(f);

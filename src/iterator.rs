@@ -1,5 +1,5 @@
 use crate::asset::ReferenceAsset;
-use crate::hash::hash_big_file_async;
+
 use std::fs;
 use std::io;
 use std::path::Path;
@@ -11,12 +11,12 @@ pub struct FileHashIterator {
 }
 
 impl Iterator for FileHashIterator {
-    type Item = io::Result<ReferenceAsset>;
+    type Item = Result<ReferenceAsset, Box<dyn std::error::Error>>;
 
     fn next(&mut self) -> Option<Self::Item> {
         while let Some(entry) = self.entries.next() {
             match entry {
-                Err(e) => return Some(Err(e)),
+                Err(e) => return Some(Err(Box::new(e))),
                 Ok(entry) => {
                     let path = entry.path();
 
@@ -25,14 +25,9 @@ impl Iterator for FileHashIterator {
                         if reference_info_path.is_file() {
                             let path_str = reference_info_path.to_string_lossy().into_owned();
 
-                            match hash_big_file_async(&path_str) {
+                            match ReferenceAsset::from_json(&path) {
                                 Err(e) => return Some(Err(e)),
-                                Ok(hash) => {
-                                    return Some(Ok(ReferenceAsset {
-                                        origin: path,
-                                        json_hash: hash,
-                                    }))
-                                }
+                                Ok(asset) => return Some(Ok(asset)),
                             }
                         }
                     }
@@ -55,7 +50,7 @@ mod test_iterator {
     use super::*;
 
     #[test]
-    fn test_collect_reference_objects() -> io::Result<()> {
+    fn test_collect_reference_objects() -> Result<(), Box<dyn std::error::Error>> {
         let path = Path::new("/Users/suslik/projects/rust/elf/test/fermen1/");
         let file_hash_iter = collect_reference_objects(&path)?;
 

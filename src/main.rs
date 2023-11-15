@@ -44,7 +44,7 @@ fn parse_path_or_exit(path: String) -> io::Result<PathBuf> {
     }
 }
 
-fn main() -> io::Result<()> {
+fn main() -> Result<(), Box<dyn std::error::Error>> {
     // parse cli
     let cli = Cli::parse();
     let config: Config;
@@ -62,7 +62,7 @@ fn main() -> io::Result<()> {
     let ref_objects = collect_reference_objects(&full_path)?;
 
     for a in ref_objects {
-        let asset = a?;
+        let asset: asset::ReferenceAsset = a?;
         eprintln!("{:#?}", asset);
     }
 

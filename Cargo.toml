@@ -9,6 +9,8 @@ edition = "2021"
 twox-hash = "1.6.3"
 clap = { version = "4.4.8", features = ["derive"] }
 serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0.108"
 toml = "0.8.8"
 dirs = "5.0.1"
 anyhow = "1.0.75"
+uuid = { version = "1.5.0", features = ["v4", "fast-rng"] }
